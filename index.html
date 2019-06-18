@@ -1,0 +1,89 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8"></meta>
+    <title></title>
+    <script src="openpgp.min.js"> </script>
+    <script src="secret.html.gpg.js"></script>
+</head>
+<body>
+
+<div style="text-align: center; position: absolute; left: 20%; width: 60%; top: 25%;">
+  <input name="passwordInput" id="passwordInput" type="password" style="font-size: 250%; width: 100%; height:100%;"/>
+  <button id="unlock" hidden onclick="unlockButtonOnClick()"></button>
+  <div id="text", style="padding-top: 4%; font-size: 180%;"></div>
+</div>
+
+<script>
+const input = document.getElementById("passwordInput");
+input.focus();
+input.select();
+input.addEventListener("keyup", event => {
+  if (event.keyCode === 13) document.getElementById("unlock").click();
+}); 
+
+function unlockButtonOnClick(){
+  document.getElementById("text").innerHTML = "loading";
+  decrypt(secret, document.getElementById("passwordInput").value)
+  .then((plaintext)=>{
+    evalHtml(plaintext)
+  })
+  .catch((err)=>{
+    document.getElementById("text").innerHTML = "Wrong password"  
+  });
+}
+
+async function decrypt(secret, password){
+  const pwUIntArray = Uint8Array.from(atob(secret), c => c.charCodeAt(0))
+  const options = {
+    message: await openpgp.message.read(pwUIntArray), // parse encrypted bytes
+    passwords: [password],                  // decrypt with password
+    format: 'utf8'                          // output as Uint8Array
+  };
+  
+  return openpgp.decrypt(options).then(function(plaintext) {
+      return plaintext.data
+  })
+}
+
+function evalHtml(htmltext){
+  const htmlInfo = parseHTML(htmltext)
+  document.body.innerHTML = htmlInfo.body;
+  // set title
+  eval(htmlInfo.script)
+}
+
+function parseHTML(htmltext){
+  let xml = (new DOMParser()).parseFromString(htmltext, "text/xml");
+
+  let htmlNode = getChildWithName(xml, "html")
+
+  let headNode = getChildWithName(htmlNode, "head")
+
+  let bodyNode = getChildWithName(htmlNode, "body")
+
+  let htmlInfo = {
+    body: "",
+    script: ""
+  }
+
+  for(let childnode of bodyNode.childNodes){
+    if(childnode.tagName === undefined){
+      htmlInfo.body += childnode.data;
+    } else if(childnode.tagName === "script"){
+      htmlInfo.script += childnode.firstChild.data;
+    }
+  }
+
+  return htmlInfo;
+}
+
+function getChildWithName(xml, name){
+  for(let childnode of xml.childNodes){
+    if(childnode.tagName === name){
+      return childnode
+    }
+  }
+}
+
+</script>
+</body>
