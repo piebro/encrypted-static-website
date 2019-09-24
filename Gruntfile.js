@@ -37,7 +37,7 @@ module.exports = function(grunt) {
 
     exec: {
       encode: 'node symetric-gpg.js encrypt secret.html secret.html.gpg.js \'<%= password1 %>\' \'<%= password2 %>\'',
-      decode: 'node symetric-gpg.js decrypt secret.html.gpg.js secret.html <%= password1 %>'
+      decode: 'node symetric-gpg.js decrypt secret.html.gpg.js secret.html \'<%= password1 %>\''
     }
   });
 
