@@ -23,6 +23,12 @@ async function decrypt(encryptedText, password){
 
   return openpgp.decrypt(options).then(function(plaintext) {
       return plaintext.data
+  }).catch(err => {
+    if(err.message === "Error decrypting message: Session key decryption failed."){
+      console.log("wrong password")
+    } else {
+      console.log(err)
+    }
   })
 }
 
